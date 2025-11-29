@@ -1,1 +1,122 @@
-/* placeholder - replace with actual styles */
+.page-home {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home-title-block h2 {
+  font-size: 20px;
+}
+
+.home-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.home-subtitle span {
+  color: var(--accent);
+}
+
+.home-category-bar-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 6px 0 2px;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 12, 16, 0.98),
+    rgba(11, 12, 16, 0.86),
+    transparent
+  );
+  backdrop-filter: blur(10px);
+}
+
+.home-category-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 6px 4px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  background: #11131c;
+  min-height: 44px;
+  align-items: center;
+}
+
+.home-category-pill {
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: #151821;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 5px 10px 5px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast), box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.home-category-pill:hover {
+  background: #191c29;
+  color: var(--text-main);
+}
+
+.home-category-pill-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.home-category-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.home-category-name {
+  white-space: nowrap;
+}
+
+.home-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.home-error {
+  color: #f97373;
+  font-size: 13px;
+}
+
+.home-error-block {
+  margin-top: 10px;
+  margin-bottom: -4px;
+  padding: 8px 10px;
+  border-radius: var(--radius-lg);
+  border: 1px solid #f97373aa;
+  background: #3b1116;
+  color: #fed7d7;
+  font-size: 13px;
+}
+
+.home-pagination-wrapper {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-pagination-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
