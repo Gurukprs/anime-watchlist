@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "@styles/pages/AnimeEntryPage.css";
 import animeApi from "@hooks/useAnimeApi";
 
@@ -15,7 +15,10 @@ const CENSORSHIP_OPTIONS = [
 
 export default function AnimeEntryPage() {
   const navigate = useNavigate();
+  const { id: animeIdParam } = useParams();
   const [searchParams] = useSearchParams();
+
+  const isEditMode = Boolean(animeIdParam);
 
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
@@ -42,17 +45,21 @@ export default function AnimeEntryPage() {
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState("");
 
+  // Load categories, tags, and (if edit mode) existing anime
   useEffect(() => {
     let cancelled = false;
 
-    async function loadMeta() {
+    async function loadMetaAndMaybeAnime() {
       try {
         setLoadingMeta(true);
         setMetaError("");
+        setSaveError("");
+        setSaveSuccess("");
 
-        const [catData, tagData] = await Promise.all([
+        const [catData, tagData, animeData] = await Promise.all([
           animeApi.getListCategories(),
-          animeApi.getTags()
+          animeApi.getTags(),
+          isEditMode ? animeApi.getAnimeById(animeIdParam) : Promise.resolve(null)
         ]);
 
         if (cancelled) return;
@@ -60,17 +67,51 @@ export default function AnimeEntryPage() {
         setCategories(catData || []);
         setTags(tagData || []);
 
-        // default category: from query ?categoryId=..., else Watching, else first
-        const categoryFromQuery = searchParams.get("categoryId");
-        const fromQueryObj = catData?.find((c) => c._id === categoryFromQuery);
-        if (fromQueryObj) {
-          setListCategoryId(fromQueryObj._id);
-        } else {
-          let watching = catData?.find((c) => c.name === "Watching");
-          if (!watching && catData && catData.length > 0) {
-            watching = catData[0];
+        if (isEditMode && animeData) {
+          // Fill form with existing values
+          setName(animeData.name || "");
+          setDescription(animeData.description || "");
+          setListCategoryId(
+            animeData.listCategory ? animeData.listCategory._id : ""
+          );
+          setImageUrl(animeData.imageUrl || "");
+          setWatchLink(animeData.watchLink || "");
+          setCensorship(animeData.censorship || "Unrated");
+          setDubSub(animeData.dubSub || "Sub");
+
+          if (typeof animeData.rating === "number") {
+            setRating(animeData.rating);
+            setRatingEnabled(true);
+          } else {
+            setRating(8);
+            setRatingEnabled(false);
           }
-          if (watching) setListCategoryId(watching._id);
+
+          const tagIds = (animeData.tags || []).map((t) => t._id);
+          setSelectedTagIds(tagIds);
+
+          setPrequelId(animeData.prequel ? animeData.prequel._id : "");
+          setSequelId(animeData.sequel ? animeData.sequel._id : "");
+          setSequenceIndex(
+            typeof animeData.sequenceIndex === "number"
+              ? String(animeData.sequenceIndex)
+              : ""
+          );
+        } else if (!isEditMode) {
+          // Create mode: default category logic
+          const categoryFromQuery = searchParams.get("categoryId");
+          const fromQueryObj = catData?.find(
+            (c) => c._id === categoryFromQuery
+          );
+          if (fromQueryObj) {
+            setListCategoryId(fromQueryObj._id);
+          } else {
+            let watching = catData?.find((c) => c.name === "Watching");
+            if (!watching && catData && catData.length > 0) {
+              watching = catData[0];
+            }
+            if (watching) setListCategoryId(watching._id);
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -81,11 +122,11 @@ export default function AnimeEntryPage() {
       }
     }
 
-    loadMeta();
+    loadMetaAndMaybeAnime();
     return () => {
       cancelled = true;
     };
-  }, [searchParams]);
+  }, [isEditMode, animeIdParam, searchParams]);
 
   const toggleTag = (id) => {
     setSelectedTagIds((prev) =>
@@ -112,33 +153,24 @@ export default function AnimeEntryPage() {
         censorship,
         tagIds: selectedTagIds,
         dubSub,
-        rating: ratingEnabled ? Number(rating) : undefined,
+        rating: ratingEnabled ? Number(rating) : null,
         prequelId: prequelId.trim() || null,
         sequelId: sequelId.trim() || null,
         sequenceIndex:
           sequenceIndex.trim() === "" ? 0 : Number(sequenceIndex.trim())
       };
 
-      const created = await animeApi.createAnime(payload);
+      let result;
+      if (isEditMode) {
+        result = await animeApi.updateAnime(animeIdParam, payload);
+        setSaveSuccess("Anime updated successfully!");
+      } else {
+        result = await animeApi.createAnime(payload);
+        setSaveSuccess("Anime saved successfully!");
+      }
 
-      setSaveSuccess("Anime saved successfully!");
-      // Clear form, but keep category
-      setName("");
-      setDescription("");
-      setImageUrl("");
-      setWatchLink("");
-      setCensorship("Unrated");
-      setDubSub("Sub");
-      setRating(8);
-      setRatingEnabled(false);
-      setSelectedTagIds([]);
-      setPrequelId("");
-      setSequelId("");
-      setSequenceIndex("");
-
-      // Option: navigate to detail page
-      if (created && created._id) {
-        navigate(`/anime/${created._id}`);
+      if (result && result._id) {
+        navigate(`/anime/${result._id}`);
       }
     } catch (err) {
       setSaveError(err.message || "Failed to save anime");
@@ -150,13 +182,17 @@ export default function AnimeEntryPage() {
   return (
     <div className="page page-entry">
       <div className="entry-header">
-        <h2>Add / Edit Anime</h2>
+        <h2>{isEditMode ? "Edit Anime" : "Add Anime"}</h2>
         <p className="entry-subtitle">
-          Fill in the details to add an anime to your watchlist.
+          {isEditMode
+            ? "Update the details of this anime entry."
+            : "Fill in the details to add an anime to your watchlist."}
         </p>
       </div>
 
-      {loadingMeta && <div className="entry-info">Loading categories & tags…</div>}
+      {loadingMeta && (
+        <div className="entry-info">Loading categories & tags…</div>
+      )}
       {metaError && <div className="entry-error">{metaError}</div>}
 
       <form className="entry-form" onSubmit={handleSubmit}>
@@ -326,7 +362,11 @@ export default function AnimeEntryPage() {
                   <span>Enable</span>
                 </label>
               </div>
-              <div className={`rating-row ${!ratingEnabled ? "rating-disabled" : ""}`}>
+              <div
+                className={`rating-row ${
+                  !ratingEnabled ? "rating-disabled" : ""
+                }`}
+              >
                 <input
                   type="range"
                   min="1"
@@ -364,8 +404,8 @@ export default function AnimeEntryPage() {
                 </label>
               </div>
               <p className="entry-hint">
-                Tip: After you create an anime, you&apos;ll see its Anime ID on the
-                detail page. Copy-paste those IDs here to link prequels/sequels.
+                Tip: Use the Anime ID from the detail page to link prequels and
+                sequels.
               </p>
             </div>
 
@@ -391,7 +431,13 @@ export default function AnimeEntryPage() {
             type="submit"
             disabled={saving || !name.trim() || !listCategoryId}
           >
-            {saving ? "Saving..." : "Save Anime"}
+            {saving
+              ? isEditMode
+                ? "Updating..."
+                : "Saving..."
+              : isEditMode
+              ? "Update Anime"
+              : "Save Anime"}
           </button>
         </div>
       </form>

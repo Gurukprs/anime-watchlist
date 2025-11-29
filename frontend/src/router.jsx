@@ -12,6 +12,7 @@ export default function AppRouter() {
       <Route path="/" element={<HomePage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/anime/new" element={<AnimeEntryPage />} />
+      <Route path="/anime/:id/edit" element={<AnimeEntryPage />} />
       <Route path="/anime/:id" element={<AnimeDetailPage />} />
       <Route path="/search" element={<SearchPage />} />
     </Routes>

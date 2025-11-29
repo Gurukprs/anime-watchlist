@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "@styles/pages/AnimeDetailPage.css";
 import animeApi from "@hooks/useAnimeApi";
 import AnimeCard from "@components/anime/AnimeCard.jsx";
 
 export default function AnimeDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [anime, setAnime] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,9 @@ export default function AnimeDetailPage() {
   const [savingRating, setSavingRating] = useState(false);
   const [ratingMessage, setRatingMessage] = useState("");
 
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
   useEffect(() => {
     let cancelled = false;
 
@@ -24,6 +28,7 @@ export default function AnimeDetailPage() {
         setLoading(true);
         setError("");
         setRatingMessage("");
+        setDeleteError("");
 
         const data = await animeApi.getAnimeById(id);
         if (cancelled) return;
@@ -75,7 +80,6 @@ export default function AnimeDetailPage() {
     try {
       setSavingRating(true);
       const updated = await animeApi.updateAnime(anime._id, {
-        // if disabled, store null; else store number
         rating: ratingEnabled ? Number(rating) : null
       });
       setAnime(updated);
@@ -92,6 +96,30 @@ export default function AnimeDetailPage() {
       setRatingMessage(err.message || "Failed to save rating");
     } finally {
       setSavingRating(false);
+    }
+  };
+
+  const handleEdit = () => {
+    if (!anime) return;
+    navigate(`/anime/${anime._id}/edit`);
+  };
+
+  const handleDelete = async () => {
+    if (!anime) return;
+    const ok = window.confirm(
+      "Are you sure you want to permanently delete this anime from your watchlist?"
+    );
+    if (!ok) return;
+
+    try {
+      setDeleteLoading(true);
+      setDeleteError("");
+      await animeApi.deleteAnime(anime._id);
+      navigate("/", { replace: true });
+    } catch (err) {
+      setDeleteError(err.message || "Failed to delete anime");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -121,7 +149,7 @@ export default function AnimeDetailPage() {
   return (
     <div className="page page-detail">
       <div className="detail-layout">
-        {/* Left section: image, ID, censorship, tags */}
+        {/* Left section */}
         <div className="detail-left">
           <div className="detail-poster-card">
             <div className="detail-poster-wrapper">
@@ -189,7 +217,7 @@ export default function AnimeDetailPage() {
           </div>
         </div>
 
-        {/* Right section: name, buttons, description, rating, prequel/sequel */}
+        {/* Right section */}
         <div className="detail-right">
           <div className="detail-header">
             <h2 className="detail-title">{anime.name}</h2>
@@ -224,8 +252,8 @@ export default function AnimeDetailPage() {
             </div>
           </div>
 
-          {anime.watchLink && (
-            <div className="detail-actions">
+          <div className="detail-toolbar">
+            {anime.watchLink && (
               <button
                 type="button"
                 className="detail-watch-btn"
@@ -233,8 +261,24 @@ export default function AnimeDetailPage() {
               >
                 Watch Now
               </button>
-            </div>
-          )}
+            )}
+            <div className="detail-toolbar-spacer" />
+            <button
+              type="button"
+              className="detail-edit-btn"
+              onClick={handleEdit}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              className="detail-delete-btn"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Deleting..." : "Delete"}
+            </button>
+          </div>
 
           <div className="detail-section">
             <h3>Description</h3>
@@ -319,6 +363,10 @@ export default function AnimeDetailPage() {
               )}
             </div>
           </div>
+
+          {deleteError && (
+            <div className="detail-delete-error">{deleteError}</div>
+          )}
         </div>
       </div>
     </div>

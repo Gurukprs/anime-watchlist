@@ -392,6 +392,70 @@
 .detail-anime-card .anime-card-image-wrapper {
   padding-top: 130%;
 }
+.detail-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.detail-toolbar-spacer {
+  flex: 1;
+}
+
+.detail-edit-btn,
+.detail-delete-btn {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast),
+    box-shadow var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.detail-edit-btn {
+  border: 1px solid var(--border-subtle);
+  background: #151821;
+  color: var(--text-muted);
+}
+
+.detail-edit-btn:hover {
+  background: #191c29;
+  color: var(--text-main);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+  transform: translateY(-1px);
+}
+
+.detail-delete-btn {
+  border: 1px solid #ef4444aa;
+  background: #2a1010;
+  color: #fecaca;
+}
+
+.detail-delete-btn:hover:not(:disabled) {
+  background: #ef4444;
+  color: #380707;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+  transform: translateY(-1px);
+}
+
+.detail-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.detail-delete-error {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #f97373aa;
+  background: #3b1116;
+  color: #fed7d7;
+  font-size: 12px;
+}
+
 
 /* Responsive fallback (if you ever shrink the window) */
 
