@@ -1,1 +1,15 @@
-// placeholder - replace with actual code from ChatGPT
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App.jsx";
+import "./styles/global.css";
+
+const rootEl = document.getElementById("root");
+
+ReactDOM.createRoot(rootEl).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);
