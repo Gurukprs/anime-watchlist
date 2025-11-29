@@ -2,8 +2,16 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import "@styles/layout/Sidebar.css";
 
+const NAV_ITEMS = [
+  { to: "/", label: "Home", icon: "🏠" },
+  { to: "/anime/new", label: "Add Anime", icon: "➕" },
+  { to: "/search", label: "Search", icon: "🔍" },
+  { to: "/settings", label: "Settings", icon: "⚙️" }
+];
+
 export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  // Default collapsed
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <aside className={`sidebar ${collapsed ? "sidebar-collapsed" : ""}`}>
@@ -11,6 +19,7 @@ export default function Sidebar() {
         <button
           className="sidebar-burger"
           onClick={() => setCollapsed((c) => !c)}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           ☰
         </button>
@@ -18,18 +27,20 @@ export default function Sidebar() {
       </div>
 
       <nav className="sidebar-nav">
-        <NavLink to="/" className="sidebar-link">
-          Home
-        </NavLink>
-        <NavLink to="/anime/new" className="sidebar-link">
-          Add Anime
-        </NavLink>
-        <NavLink to="/search" className="sidebar-link">
-          Search
-        </NavLink>
-        <NavLink to="/settings" className="sidebar-link">
-          Settings
-        </NavLink>
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className="sidebar-link"
+          >
+            <div className="sidebar-link-inner">
+              <span className="sidebar-link-icon" aria-hidden="true">
+                {item.icon}
+              </span>
+              <span className="sidebar-link-text">{item.label}</span>
+            </div>
+          </NavLink>
+        ))}
       </nav>
     </aside>
   );

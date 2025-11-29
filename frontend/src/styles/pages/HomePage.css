@@ -24,23 +24,26 @@
   color: var(--accent);
 }
 
+/* Sticky wrapper stays the same */
 .home-category-bar-wrapper {
   position: sticky;
   top: 0;
   z-index: 5;
   padding: 6px 0 2px;
-  background: linear-gradient(
+  background: transparent;
+  /* background: linear-gradient(
     180deg,
     rgba(11, 12, 16, 0.98),
     rgba(11, 12, 16, 0.86),
     transparent
   );
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px); */
 }
 
+/* Horizontal scroll bar */
 .home-category-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;         /* no wrapping */
   gap: 6px;
   padding: 6px 6px 4px;
   border-radius: var(--radius-xl);
@@ -48,9 +51,27 @@
   background: #11131c;
   min-height: 44px;
   align-items: center;
+  overflow-x: auto;          /* enable horizontal scroll */
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
+/* Hide scrollbar (optional, but keeps scroll behavior) */
+.home-category-bar::-webkit-scrollbar {
+  height: 6px;
+}
+.home-category-bar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.home-category-bar::-webkit-scrollbar-thumb {
+  background: #262a3a;
+  border-radius: 999px;
+}
+
+/* Category pills */
+
 .home-category-pill {
+  flex-shrink: 0; /* prevent squishing when overflow */
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
   background: #151821;
