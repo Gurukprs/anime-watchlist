@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const { seedDefaultListCategories } = require("./utils/seedDefaults");
 const exportRoutes = require("./routes/exportRoutes");
+const path = require("path");
 
 // Load env
 dotenv.config();
@@ -44,6 +45,15 @@ app.use("/api/tags", tagRoutes);
 app.use("/api/list-categories", listCategoryRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/export", exportRoutes);
+
+
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+});
+// ---------------Remove this line and above if using separate frontend server----------------
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
