@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "@styles/components/AnimeCard.css";
 
-export default function AnimeCard({ anime }) {
+export default function AnimeCard({ anime, className = "" }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -15,7 +15,7 @@ export default function AnimeCard({ anime }) {
       : null;
 
   return (
-    <div className="anime-card" onClick={handleClick}>
+    <div className={`anime-card ${className}`} onClick={handleClick}>
       <div className="anime-card-image-wrapper">
         {imageUrl ? (
           <img

@@ -49,6 +49,13 @@ const animeApi = {
   async getListCategories() {
     return request("/list-categories");
   },
+  
+  async createListCategory(payload) {
+    return request("/list-categories", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
 
   // Tags
   async getTags() {
