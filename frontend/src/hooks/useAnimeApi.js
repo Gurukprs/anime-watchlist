@@ -103,6 +103,19 @@ const animeApi = {
   async searchAnime(params = {}) {
     const qs = buildQuery(params);
     return request(`/search${qs}`);
+  },
+
+  // Export / Import
+  async exportAll() {
+    return request("/export");
+  },
+
+  async importAll(payload, mode = "replace") {
+    const qs = buildQuery({ mode });
+    return request(`/export${qs}`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
   }
 };
 

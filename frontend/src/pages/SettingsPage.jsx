@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "@styles/pages/SettingsPage.css";
 import animeApi from "@hooks/useAnimeApi";
 
@@ -18,6 +18,12 @@ export default function SettingsPage() {
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#9aa0b5");
   const [tagSaving, setTagSaving] = useState(false);
+
+  // Backup / restore
+  const [backupMessage, setBackupMessage] = useState("");
+  const [backupError, setBackupError] = useState("");
+  const [importLoading, setImportLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,19 +94,99 @@ export default function SettingsPage() {
     }
   };
 
+  // --- Export ---
+
+  const handleExport = async () => {
+    try {
+      setBackupError("");
+      setBackupMessage("Preparing export…");
+      const data = await animeApi.exportAll();
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+
+      const now = new Date();
+      const pad = (n) => (n < 10 ? `0${n}` : `${n}`);
+      const filename = `anime-watchlist-backup-${now.getFullYear()}${pad(
+        now.getMonth() + 1
+      )}${pad(now.getDate())}-${pad(now.getHours())}${pad(
+        now.getMinutes()
+      )}${pad(now.getSeconds())}.json`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setBackupMessage("Export completed. JSON file downloaded.");
+      setTimeout(() => setBackupMessage(""), 3000);
+    } catch (err) {
+      setBackupError(err.message || "Failed to export data");
+      setBackupMessage("");
+    }
+  };
+
+  // --- Import ---
+
+  const triggerImport = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        setImportLoading(true);
+        setBackupError("");
+        setBackupMessage("Importing (replace mode)…");
+
+        const text = reader.result;
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error("Selected file is not valid JSON");
+        }
+
+        await animeApi.importAll(data, "replace");
+
+        setBackupMessage("Import successful. Reloading data…");
+        setTimeout(() => {
+          window.location.reload();
+        }, 800);
+      } catch (err) {
+        setBackupError(err.message || "Failed to import data");
+        setBackupMessage("");
+      } finally {
+        setImportLoading(false);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="page page-settings">
       <div className="settings-header">
         <h2>Settings</h2>
         <p className="settings-subtitle">
-          Manage your list categories (stages) and tags here.
+          Manage your list categories, tags, and backup/restore your data.
         </p>
       </div>
 
       {loading && <div className="settings-info">Loading data…</div>}
       {error && <div className="settings-error">{error}</div>}
 
-      <div className="settings-grid">
+      <div className="settings-grid settings-grid-3">
         {/* List Categories */}
         <section className="settings-card">
           <h3>List Categories</h3>
@@ -210,6 +296,59 @@ export default function SettingsPage() {
               <div className="settings-empty">No tags yet.</div>
             )}
           </div>
+        </section>
+
+        {/* Backup / Restore */}
+        <section className="settings-card">
+          <h3>Backup &amp; Restore</h3>
+          <p className="settings-card-subtitle">
+            Export all categories, tags, and anime to a JSON file, or import a
+            previous backup.
+          </p>
+
+          <div className="backup-actions">
+            <button
+              type="button"
+              className="backup-btn"
+              onClick={handleExport}
+            >
+              Export to JSON
+            </button>
+
+            <button
+              type="button"
+              className="backup-btn backup-btn-danger"
+              onClick={triggerImport}
+              disabled={importLoading}
+            >
+              {importLoading ? "Importing..." : "Import from JSON"}
+            </button>
+          </div>
+
+          <p className="backup-warning">
+            Import will <strong>replace</strong> your current data
+            (categories, tags, and anime) with the contents of the file.
+            Make sure you export a backup first.
+          </p>
+
+          {backupMessage && (
+            <div className="backup-message backup-message-ok">
+              {backupMessage}
+            </div>
+          )}
+          {backupError && (
+            <div className="backup-message backup-message-error">
+              {backupError}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
         </section>
       </div>
     </div>

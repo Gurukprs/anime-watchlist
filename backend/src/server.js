@@ -5,6 +5,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const { seedDefaultListCategories } = require("./utils/seedDefaults");
+const exportRoutes = require("./routes/exportRoutes");
 
 // Load env
 dotenv.config();
@@ -42,6 +43,7 @@ app.use("/api/anime", animeRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/list-categories", listCategoryRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/export", exportRoutes);
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);

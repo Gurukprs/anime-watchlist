@@ -30,8 +30,24 @@
 
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+/* Make it 3 columns when wide */
+.settings-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+  .settings-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .settings-grid-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .settings-card {
@@ -172,4 +188,83 @@
   padding: 6px 4px;
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* Backup / restore */
+
+.backup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.backup-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast), transform var(--transition-fast),
+    box-shadow var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.backup-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: #05060a;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+  transform: translateY(-1px);
+}
+
+.backup-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.backup-btn-danger {
+  border-color: #ef4444aa;
+  background: #2a1010;
+  color: #fecaca;
+}
+
+.backup-btn-danger:hover:not(:disabled) {
+  background: #ef4444;
+  color: #380707;
+}
+
+.backup-warning {
+  font-size: 11px;
+  color: #fed7d7;
+  background: #3b1116;
+  border-radius: 8px;
+  border: 1px solid #f97373aa;
+  padding: 6px 8px;
+  margin-top: 4px;
+}
+
+.backup-warning strong {
+  color: #fecaca;
+}
+
+.backup-message {
+  margin-top: 6px;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.backup-message-ok {
+  border: 1px solid #22c55eaa;
+  background: #052e16;
+  color: #bbf7d0;
+}
+
+.backup-message-error {
+  border: 1px solid #f97373aa;
+  background: #3b1116;
+  color: #fed7d7;
 }
