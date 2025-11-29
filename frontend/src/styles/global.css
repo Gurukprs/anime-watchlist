@@ -1,1 +1,49 @@
-/* placeholder - replace with actual styles */
+:root {
+  --bg-main: #0b0c10;
+  --bg-sidebar: #11131c;
+  --bg-surface: #151821;
+  --accent: #ff5c7c;
+  --accent-soft: #ff5c7c22;
+  --text-main: #f2f5ff;
+  --text-muted: #9aa0b5;
+  --border-subtle: #25293a;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --shadow-soft: 0 18px 30px rgba(0, 0, 0, 0.6);
+  --transition-fast: 0.2s ease;
+  --sidebar-width: 230px;
+  --sidebar-width-collapsed: 64px;
+  --topnav-height: 60px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: radial-gradient(circle at top, #171a24 0, #05060a 55%);
+  color: var(--text-main);
+}
+
+/* Utility */
+
+.page {
+  padding: 16px 20px 24px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
