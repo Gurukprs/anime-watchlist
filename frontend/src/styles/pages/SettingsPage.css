@@ -190,6 +190,33 @@
   color: var(--text-muted);
 }
 
+.settings-delete-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid #ef4444aa;
+  background: #2a1010;
+  color: #fecaca;
+  font-size: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast), transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.settings-delete-btn:hover {
+  background: #ef4444;
+  color: #380707;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+  transform: translateY(-1px);
+}
+
+
 /* Backup / restore */
 
 .backup-actions {

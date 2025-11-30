@@ -7,13 +7,37 @@ import Pagination from "@components/anime/Pagination.jsx";
 const PAGE_LIMIT = 50; // 10 rows x 5 cards
 
 export default function HomePage() {
+  // Load initial category/page from sessionStorage (if present)
+  const [selectedCategoryId, setSelectedCategoryId] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem("homeState");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return parsed.categoryId || null;
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
+  const [animePage, setAnimePage] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem("homeState");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return parsed.page || 1;
+      }
+    } catch {
+      // ignore
+    }
+    return 1;
+  });
+
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-
-  const [animePage, setAnimePage] = useState(1);
   const [animeData, setAnimeData] = useState({
     items: [],
     totalPages: 1,
@@ -22,7 +46,22 @@ export default function HomePage() {
   const [animeLoading, setAnimeLoading] = useState(false);
   const [animeError, setAnimeError] = useState("");
 
-  // Fetch list categories on mount
+  // Persist category + page whenever they change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        "homeState",
+        JSON.stringify({
+          categoryId: selectedCategoryId,
+          page: animePage
+        })
+      );
+    } catch {
+      // ignore
+    }
+  }, [selectedCategoryId, animePage]);
+
+  // Fetch categories once
   useEffect(() => {
     let cancelled = false;
     async function loadCategories() {
@@ -34,13 +73,15 @@ export default function HomePage() {
 
         setCategories(data || []);
 
-        // Prefer "Watching" as default, else first category
-        let defaultCat = data?.find((c) => c.name === "Watching");
-        if (!defaultCat && data && data.length > 0) {
-          defaultCat = data[0];
-        }
-        if (defaultCat) {
-          setSelectedCategoryId(defaultCat._id);
+        // If we didn't restore anything, choose a default
+        if (!selectedCategoryId) {
+          let defaultCat = data?.find((c) => c.name === "Watching");
+          if (!defaultCat && data && data.length > 0) {
+            defaultCat = data[0];
+          }
+          if (defaultCat) {
+            setSelectedCategoryId(defaultCat._id);
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -55,12 +96,8 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // When category changes, reset page to 1
-  useEffect(() => {
-    setAnimePage(1);
-  }, [selectedCategoryId]);
 
   // Fetch anime whenever selected category or page changes
   useEffect(() => {
@@ -101,6 +138,22 @@ export default function HomePage() {
     };
   }, [selectedCategoryId, animePage]);
 
+  // After anime finishes loading, restore scrollY if we have one saved
+  useEffect(() => {
+    if (animeLoading) return;
+    try {
+      const raw = sessionStorage.getItem("homeScrollY");
+      if (!raw) return;
+      const y = Number(raw);
+      if (!Number.isNaN(y)) {
+        window.scrollTo(0, y);
+      }
+      sessionStorage.removeItem("homeScrollY");
+    } catch {
+      // ignore
+    }
+  }, [animeLoading]);
+
   const currentCategory = useMemo(
     () => categories.find((c) => c._id === selectedCategoryId) || null,
     [categories, selectedCategoryId]
@@ -108,11 +161,12 @@ export default function HomePage() {
 
   const handleCategoryClick = (id) => {
     setSelectedCategoryId(id);
+    setAnimePage(1); // when user changes category, reset to page 1
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handlePageChange = (page) => {
     setAnimePage(page);
-    // scroll to top of content when page changes
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

@@ -6,6 +6,13 @@ export default function AnimeCard({ anime, className = "" }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
+    // Save current scroll position so Home can restore it later
+    try {
+      sessionStorage.setItem("homeScrollY", String(window.scrollY || 0));
+    } catch {
+      // ignore if sessionStorage not available
+    }
+
     navigate(`/anime/${anime._id}`);
   };
 

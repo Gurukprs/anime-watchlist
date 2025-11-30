@@ -94,6 +94,46 @@ export default function SettingsPage() {
     }
   };
 
+  // --- Delete category ---
+
+  const handleDeleteCategory = async (category) => {
+    const { _id, name, isDefault } = category;
+    if (isDefault) {
+      alert("Default categories cannot be deleted.");
+      return;
+    }
+
+    const ok = window.confirm(
+      `Delete category "${name}"?\n\nNote: You must move or delete anime using this category first.`
+    );
+    if (!ok) return;
+
+    try {
+      await animeApi.deleteListCategory(_id);
+      setCategories((prev) => prev.filter((c) => c._id !== _id));
+    } catch (err) {
+      // Backend already sends helpful messages (e.g. if anime still use it)
+      alert(err.message || "Failed to delete category");
+    }
+  };
+
+  // --- Delete tag ---
+
+  const handleDeleteTag = async (tag) => {
+    const { _id, name } = tag;
+    const ok = window.confirm(
+      `Delete tag "${name}"?\n\nThis will remove the tag from all anime that use it.`
+    );
+    if (!ok) return;
+
+    try {
+      await animeApi.deleteTag(_id);
+      setTags((prev) => prev.filter((t) => t._id !== _id));
+    } catch (err) {
+      alert(err.message || "Failed to delete tag");
+    }
+  };
+
   // --- Export ---
 
   const handleExport = async () => {
@@ -236,6 +276,17 @@ export default function SettingsPage() {
                       <span className="settings-badge">default</span>
                     )}
                   </div>
+
+                  {!cat.isDefault && (
+                    <button
+                      type="button"
+                      className="settings-delete-btn"
+                      onClick={() => handleDeleteCategory(cat)}
+                      title="Delete category"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))
             ) : (
@@ -290,6 +341,14 @@ export default function SettingsPage() {
                     />
                     <span className="settings-list-name">{tag.name}</span>
                   </div>
+                  <button
+                    type="button"
+                    className="settings-delete-btn"
+                    onClick={() => handleDeleteTag(tag)}
+                    title="Delete tag"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))
             ) : (

@@ -57,6 +57,11 @@ const animeApi = {
     });
   },
 
+  async deleteListCategory(id) {
+    return request(`/list-categories/${id}`, {
+      method: "DELETE"
+    });
+  },
   // Tags
   async getTags() {
     return request("/tags");
@@ -66,6 +71,12 @@ const animeApi = {
     return request("/tags", {
       method: "POST",
       body: JSON.stringify(payload)
+    });
+  },
+
+  async deleteTag(id) {
+    return request(`/tags/${id}`, {
+      method: "DELETE"
     });
   },
 
