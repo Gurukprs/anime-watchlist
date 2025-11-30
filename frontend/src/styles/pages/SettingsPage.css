@@ -33,6 +33,13 @@
   gap: 12px;
 }
 
+.settings-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+
 /* Make it 3 columns when wide */
 .settings-grid-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));

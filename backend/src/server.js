@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const { seedDefaultListCategories } = require("./utils/seedDefaults");
 const exportRoutes = require("./routes/exportRoutes");
+const malImportRoutes = require("./routes/malImportRoutes");
 const path = require("path");
 
 // Load env
@@ -45,6 +46,8 @@ app.use("/api/tags", tagRoutes);
 app.use("/api/list-categories", listCategoryRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/export", exportRoutes);
+app.use("/api/import/mal", malImportRoutes);
+
 
 
 // Serve frontend static files

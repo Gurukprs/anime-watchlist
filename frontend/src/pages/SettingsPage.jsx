@@ -23,7 +23,14 @@ export default function SettingsPage() {
   const [backupMessage, setBackupMessage] = useState("");
   const [backupError, setBackupError] = useState("");
   const [importLoading, setImportLoading] = useState(false);
-  const fileInputRef = useRef(null);
+  const backupFileInputRef = useRef(null);
+
+  // MAL / HiAnime import
+  const [malImportCategoryId, setMalImportCategoryId] = useState("");
+  const [malImportLoading, setMalImportLoading] = useState(false);
+  const [malImportMessage, setMalImportMessage] = useState("");
+  const [malImportError, setMalImportError] = useState("");
+  const malFileInputRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +119,6 @@ export default function SettingsPage() {
       await animeApi.deleteListCategory(_id);
       setCategories((prev) => prev.filter((c) => c._id !== _id));
     } catch (err) {
-      // Backend already sends helpful messages (e.g. if anime still use it)
       alert(err.message || "Failed to delete category");
     }
   };
@@ -170,16 +176,16 @@ export default function SettingsPage() {
     }
   };
 
-  // --- Import ---
+  // --- Import (our backup JSON) ---
 
-  const triggerImport = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-      fileInputRef.current.click();
+  const triggerBackupImport = () => {
+    if (backupFileInputRef.current) {
+      backupFileInputRef.current.value = "";
+      backupFileInputRef.current.click();
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleBackupFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -214,12 +220,57 @@ export default function SettingsPage() {
     reader.readAsText(file);
   };
 
+  // --- Import from MAL / HiAnime ---
+
+  const triggerMalImport = () => {
+    if (!malImportCategoryId) {
+      alert("Please select a target category.");
+      return;
+    }
+    if (malFileInputRef.current) {
+      malFileInputRef.current.value = "";
+      malFileInputRef.current.click();
+    }
+  };
+
+  const handleMalFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        setMalImportLoading(true);
+        setMalImportError("");
+        setMalImportMessage("Importing MAL file…");
+
+        const text = reader.result;
+
+        const result = await animeApi.importMalToCategory(
+          malImportCategoryId,
+          text
+        );
+
+        setMalImportMessage(
+          `Imported ${result.created || 0} anime from MAL into selected category.`
+        );
+        setTimeout(() => setMalImportMessage(""), 4000);
+      } catch (err) {
+        setMalImportError(err.message || "Failed to import MAL file");
+        setMalImportMessage("");
+      } finally {
+        setMalImportLoading(false);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="page page-settings">
       <div className="settings-header">
         <h2>Settings</h2>
         <p className="settings-subtitle">
-          Manage your list categories, tags, and backup/restore your data.
+          Manage your list categories, tags, backups, and imports.
         </p>
       </div>
 
@@ -377,7 +428,7 @@ export default function SettingsPage() {
             <button
               type="button"
               className="backup-btn backup-btn-danger"
-              onClick={triggerImport}
+              onClick={triggerBackupImport}
               disabled={importLoading}
             >
               {importLoading ? "Importing..." : "Import from JSON"}
@@ -402,11 +453,76 @@ export default function SettingsPage() {
           )}
 
           <input
-            ref={fileInputRef}
+            ref={backupFileInputRef}
             type="file"
             accept="application/json"
             style={{ display: "none" }}
-            onChange={handleFileChange}
+            onChange={handleBackupFileChange}
+          />
+        </section>
+
+        {/* Import from MAL / HiAnime */}
+        <section className="settings-card">
+          <h3>Import from MAL / HiAnime</h3>
+          <p className="settings-card-subtitle">
+            Import anime from a MyAnimeList XML export file (for example exported
+            via HiAnime&apos;s MAL import/export). Only anime entries will be
+            created, into a single selected category.
+          </p>
+
+          <div className="settings-form">
+            <div className="form-row">
+              <label>
+                Target category
+                <select
+                  value={malImportCategoryId}
+                  onChange={(e) => setMalImportCategoryId(e.target.value)}
+                >
+                  <option value="">Select category</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <button
+              type="button"
+              className="backup-btn"
+              onClick={triggerMalImport}
+              disabled={!malImportCategoryId || malImportLoading}
+            >
+              {malImportLoading
+                ? "Importing MAL file..."
+                : "Choose MAL XML & Import"}
+            </button>
+          </div>
+
+          <p className="settings-note">
+            This does <strong>not</strong> change your existing data. It only
+            adds new anime into the selected category. Duplicates (same title)
+            are not automatically merged.
+          </p>
+
+          {malImportMessage && (
+            <div className="backup-message backup-message-ok">
+              {malImportMessage}
+            </div>
+          )}
+          {malImportError && (
+            <div className="backup-message backup-message-error">
+              {malImportError}
+            </div>
+          )}
+
+          <input
+            ref={malFileInputRef}
+            type="file"
+            accept=".xml,text/xml"
+            style={{ display: "none" }}
+            onChange={handleMalFileChange}
           />
         </section>
       </div>

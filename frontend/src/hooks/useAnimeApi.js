@@ -127,7 +127,16 @@ const animeApi = {
       method: "POST",
       body: JSON.stringify(payload)
     });
+  },
+
+  // Import from MAL / HiAnime into a single category
+  async importMalToCategory(listCategoryId, xmlText) {
+    return request("/import/mal", {
+      method: "POST",
+      body: JSON.stringify({ listCategoryId, xml: xmlText })
+    });
   }
+
 };
 
 export default animeApi;
