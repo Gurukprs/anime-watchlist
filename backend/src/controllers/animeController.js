@@ -28,6 +28,51 @@ function buildAnimeFilter(query) {
   return filter;
 }
 
+// Helper: keep prequel / sequel mutual links in sync
+async function syncLinkedAnimeRelations(anime, oldPrequelId = null, oldSequelId = null) {
+  if (!anime || !anime._id) return;
+
+  const id = anime._id.toString();
+  const newPrequelId = anime.prequel ? anime.prequel.toString() : null;
+  const newSequelId = anime.sequel ? anime.sequel.toString() : null;
+
+  // --- PREQUEL handling ---
+
+  // If old prequel changed or was removed, clear its sequel if it pointed to this anime
+  if (oldPrequelId && oldPrequelId !== newPrequelId) {
+    await Anime.updateOne(
+      { _id: oldPrequelId, sequel: id },
+      { $set: { sequel: null } }
+    );
+  }
+
+  // If there is a new prequel, make sure that anime's sequel points to this one
+  if (newPrequelId && newPrequelId !== id) {
+    await Anime.updateOne(
+      { _id: newPrequelId },
+      { $set: { sequel: id } }
+    );
+  }
+
+  // --- SEQUEL handling ---
+
+  // If old sequel changed or was removed, clear its prequel if it pointed to this anime
+  if (oldSequelId && oldSequelId !== newSequelId) {
+    await Anime.updateOne(
+      { _id: oldSequelId, prequel: id },
+      { $set: { prequel: null } }
+    );
+  }
+
+  // If there is a new sequel, make sure that anime's prequel points to this one
+  if (newSequelId && newSequelId !== id) {
+    await Anime.updateOne(
+      { _id: newSequelId },
+      { $set: { prequel: id } }
+    );
+  }
+}
+
 // GET /api/anime
 async function getAnimes(req, res) {
   try {
@@ -122,6 +167,9 @@ async function createAnime(req, res) {
       sequenceIndex: sequenceIndex || 0
     });
 
+    // New anime has no old prequel/sequel, so pass nulls
+    await syncLinkedAnimeRelations(anime, null, null);
+
     const populated = await Anime.findById(anime._id)
       .populate("listCategory")
       .populate("tags")
@@ -159,6 +207,10 @@ async function updateAnime(req, res) {
       return res.status(404).json({ message: "Anime not found" });
     }
 
+    // Remember old links for cleanup
+    const oldPrequelId = anime.prequel ? anime.prequel.toString() : null;
+    const oldSequelId = anime.sequel ? anime.sequel.toString() : null;
+
     if (name !== undefined) anime.name = name;
     if (description !== undefined) anime.description = description;
     if (listCategoryId !== undefined) anime.listCategory = listCategoryId;
@@ -173,6 +225,9 @@ async function updateAnime(req, res) {
     if (sequenceIndex !== undefined) anime.sequenceIndex = sequenceIndex;
 
     await anime.save();
+
+    // Sync prequel / sequel from old to new
+    await syncLinkedAnimeRelations(anime, oldPrequelId, oldSequelId);
 
     const populated = await Anime.findById(anime._id)
       .populate("listCategory")
@@ -197,7 +252,28 @@ async function deleteAnime(req, res) {
       return res.status(404).json({ message: "Anime not found" });
     }
 
+    const animeId = anime._id.toString();
+    const prequelId = anime.prequel ? anime.prequel.toString() : null;
+    const sequelId = anime.sequel ? anime.sequel.toString() : null;
+
+    // Delete this anime
     await Anime.findByIdAndDelete(id);
+
+    // Clean up linked relations if they pointed to this anime
+    if (prequelId) {
+      await Anime.updateOne(
+        { _id: prequelId, sequel: animeId },
+        { $set: { sequel: null } }
+      );
+    }
+
+    if (sequelId) {
+      await Anime.updateOne(
+        { _id: sequelId, prequel: animeId },
+        { $set: { prequel: null } }
+      );
+    }
+
     res.json({ message: "Anime deleted" });
   } catch (err) {
     console.error("deleteAnime error:", err);
